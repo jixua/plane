@@ -429,22 +429,16 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
   );
 
   /**
-   * Gets the next page cursor based on number of issues currently available
+   * The cursor for the next page, taken from the last response rather than counted out of the issues held
+   * in the store. The list is re-sorted once it arrives, so its length is not the number of rows the server
+   * has already returned: when the order key repeats, items from a later page sort in among the earlier ones
+   * and the recount asks for a page that was already loaded, so everything past it is never fetched.
    * @param groupId groupId for the cursor
    * @param subGroupId subgroupId for cursor
    * @returns next page cursor or undefined
    */
-  getNextCursor = (groupId: string | undefined, subGroupId: string | undefined): string | undefined => {
-    const groupedIssues = this.getIssueIds(groupId, subGroupId) ?? [];
-    const currentIssueCount = groupedIssues.length;
-
-    if (!this.paginationOptions) return;
-
-    const { perPageCount } = this.paginationOptions;
-    const nextPage = Math.floor(currentIssueCount / perPageCount);
-
-    return `${perPageCount}:${nextPage}:0`;
-  };
+  getNextCursor = (groupId: string | undefined, subGroupId: string | undefined): string | undefined =>
+    this.getPaginationData(groupId, subGroupId)?.nextCursor;
 
   /**
    * This Method is called after fetching the first paginated issues
